@@ -120,25 +120,28 @@ function twig_get_instance() {
     $twigEnvironment['autoescape'] = variable_get('twig_autoescape', FALSE); // Automatically escape all output
     $twigEnvironment['auto_reload'] = variable_get('twig_auto_reload',TRUE);
     $twigEnvironment['debug'] = variable_get('theme_debug',FALSE);
-    if (FALSE !== $cache = variable_get('file_twigcache_path', FALSE)) {
-      file_prepare_directory($cache, FILE_CREATE_DIRECTORY);
-      $twigEnvironment['cache'] = $cache;
-    }
-    elseif (FALSE !== $cache = twig_test_cachepath('private://twig_cache' . '/' . $theme_info->name)) {
-      $twigEnvironment['cache'] = $cache;
-    }
-    elseif (FALSE !== $cache = twig_test_cachepath('public://twig_cache' . '/' . $theme_info->name)) {
-      $twigEnvironment['cache'] = $cache;
-    }
-    else {
-      $cache = 'public://twig_cache' . '/' . $theme_info->name;
-      // Fallback and create the twig_cache folder in public://
-      file_prepare_directory($cache, FILE_CREATE_DIRECTORY);
-      if (!twig_test_cachepath($cache)) {
-        die('Could not write to a valid cache path');
+
+    if (variable_get('file_twigcache', TRUE) === TRUE) {
+      if (FALSE !== $cache_path = variable_get('file_twigcache_path', FALSE)) {
+        file_prepare_directory($cache_path, FILE_CREATE_DIRECTORY);
+        $twigEnvironment['cache'] = $cache_path;
+      }
+      elseif (FALSE !== $cache_path = twig_test_cachepath('private://twig_cache' . '/' . $theme_info->name)) {
+        $twigEnvironment['cache'] = $cache_path;
+      }
+      elseif (FALSE !== $cache_path = twig_test_cachepath('public://twig_cache' . '/' . $theme_info->name)) {
+        $twigEnvironment['cache'] = $cache_path;
       }
       else {
-        $twigEnvironment['cache'] = $cache;
+        $cache_path = 'public://twig_cache' . '/' . $theme_info->name;
+        // Fallback and create the twig_cache folder in public://
+        file_prepare_directory($cache_path, FILE_CREATE_DIRECTORY);
+        if (!twig_test_cachepath($cache_path)) {
+          die('Could not write to a valid cache path');
+        }
+        else {
+          $twigEnvironment['cache'] = $cache_path;
+        }
       }
     }
 
