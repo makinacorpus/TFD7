@@ -67,9 +67,12 @@ class TFD_Environment extends Twig_Environment
         if ($cache = $this->getCache()) {
             $name = $this->generateCacheKeyByName($name);
             $name .= '.php';
-            $dir = $cache . '/' . dirname($name);
+            $dir = rtrim($cache, '/') . '/' . dirname($name);
             if (!is_dir($dir)) {
-                if (!mkdir($dir, 0777, true)) {
+                $oldumask = umask(0);
+                $mkdir_success = mkdir($dir, 0777, true);
+                umask($oldumask);
+                if (!$mkdir_success) {
                     throw new Exception("Cache directory $cache is not deep writable?");
                 }
             }
@@ -98,7 +101,9 @@ class TFD_Environment extends Twig_Environment
     {
         try {
             if (!is_dir(dirname($file))) {
+                $oldumask = umask(0);
                 mkdir(dirname($file), 0777, true);
+                umask($oldumask);
             }
             $tmpFile = tempnam(dirname($file), basename($file));
             if (false !== @file_put_contents($tmpFile, $content)) {
