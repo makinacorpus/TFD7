@@ -102,7 +102,7 @@ function twig_render_template($template, $variables = array()) {
  * @return void
  */
 function twig_clear_cache() {
-  twig_get_instance()->flushCompilerCache();
+  twig_get_cache_bin()->deleteAll();
   watchdog('twig', 'All caches cleared');
 }
 
@@ -119,9 +119,8 @@ function twig_get_instance() {
     $twigEnvironment['autoescape'] = variable_get('twig_autoescape', FALSE); // Automatically escape all output
     $twigEnvironment['auto_reload'] = variable_get('twig_auto_reload',TRUE);
     $twigEnvironment['debug'] = variable_get('theme_debug',FALSE);
-
     if (variable_get('file_twigcache', TRUE) === TRUE) {
-      $twigEnvironment['cache'] = twig_get_cache_path(variable_get('file_twigcache_path', FALSE));
+      $twigEnvironment['cache'] = twig_get_cache_bin();
     }
 
     $loader = new TFD_Loader_Filesystem();
@@ -225,13 +224,13 @@ function twig_test_cachepath($path) {
 }
 
 /**
- * @param $cache_path
- * @return bool|string
+ * @return string
  * @throws ErrorException
  */
-function twig_get_cache_path($cache_path) {
+function twig_get_cache_path() {
   global $theme_info;
 
+  $cache_path = variable_get('file_twigcache_path', FALSE);
   if (FALSE !== $cache_path) {
     file_prepare_directory($cache_path, FILE_CREATE_DIRECTORY);
     return $cache_path;
@@ -253,4 +252,16 @@ function twig_get_cache_path($cache_path) {
       return $cache_path;
     }
   }
+}
+
+/**
+ * @return TFD_Cache_Filesystem
+ * @throws ErrorException
+ */
+function twig_get_cache_bin() {
+  static $cache_bin;
+  if (!is_object($cache_bin)) {
+    $cache_bin = New TFD_Cache_Filesystem(twig_get_cache_path());
+  }
+  return $cache_bin;
 }
