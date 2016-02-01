@@ -114,32 +114,13 @@ function twig_clear_cache() {
 function twig_get_instance() {
   static $twig_engine;
   if (!is_object($twig_engine)) {
-    global $theme_info;
     $twigEnvironment = array();
     $twigEnvironment['autorender'] = variable_get('twig_autorender',TRUE);
     $twigEnvironment['autoescape'] = variable_get('twig_autoescape', FALSE); // Automatically escape all output
     $twigEnvironment['auto_reload'] = variable_get('twig_auto_reload',TRUE);
     $twigEnvironment['debug'] = variable_get('theme_debug',FALSE);
-    if (FALSE !== $cache = variable_get('file_twigcache_path', FALSE)) {
-      file_prepare_directory($cache, FILE_CREATE_DIRECTORY);
-      $twigEnvironment['cache'] = $cache;
-    }
-    elseif (FALSE !== $cache = twig_test_cachepath('private://twig_cache' . '/' . $theme_info->name)) {
-      $twigEnvironment['cache'] = $cache;
-    }
-    elseif (FALSE !== $cache = twig_test_cachepath('public://twig_cache' . '/' . $theme_info->name)) {
-      $twigEnvironment['cache'] = $cache;
-    }
-    else {
-      $cache = 'public://twig_cache' . '/' . $theme_info->name;
-      // Fallback and create the twig_cache folder in public://
-      file_prepare_directory($cache, FILE_CREATE_DIRECTORY);
-      if (!twig_test_cachepath($cache)) {
-        die('Could not write to a valid cache path');
-      }
-      else {
-        $twigEnvironment['cache'] = $cache;
-      }
+    if (variable_get('file_twigcache', TRUE) === TRUE) {
+      $twigEnvironment['cache'] = twig_get_cache_path();
     }
 
     $loader = new TFD_Loader_Filesystem();
@@ -242,3 +223,33 @@ function twig_test_cachepath($path) {
   return FALSE;
 }
 
+/**
+ * @return string
+ * @throws ErrorException
+ */
+function twig_get_cache_path() {
+  global $theme_info;
+
+  $cache_path = variable_get('file_twigcache_path', FALSE);
+  if (FALSE !== $cache_path) {
+    file_prepare_directory($cache_path, FILE_CREATE_DIRECTORY);
+    return $cache_path;
+  }
+  elseif (FALSE !== $cache_path = twig_test_cachepath('private://twig_cache' . '/' . $theme_info->name)) {
+    return $cache_path;
+  }
+  elseif (FALSE !== $cache_path = twig_test_cachepath('public://twig_cache' . '/' . $theme_info->name)) {
+    return $cache_path;
+  }
+  else {
+    $cache_path = 'public://twig_cache' . '/' . $theme_info->name;
+    // Fallback and create the twig_cache folder in public://
+    file_prepare_directory($cache_path, FILE_CREATE_DIRECTORY);
+    if (!twig_test_cachepath($cache_path)) {
+      throw new ErrorException('Could not write to a valid cache path');
+    }
+    else {
+      return $cache_path;
+    }
+  }
+}
