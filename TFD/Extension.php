@@ -436,7 +436,7 @@ function tfd_interval($date, $granularity = 2, $display_ago = TRUE, $langcode = 
 }
 
 function tfd_format_date($date, $type, $langcode = NULL) {
-  if (preg_match('/[^\d]/', $date)) {
+  if (!preg_match('/^\d+$/', $date)) {
     $date = strtotime($date);
   }
 
