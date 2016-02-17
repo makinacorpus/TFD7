@@ -16,7 +16,7 @@
     ],
         "autoload": {
         "psr-0" : {
-            "TFD_'" : "TFD/"
+            "TFD_" : ""
         }
     },
     "minimum-stability": "dev"
