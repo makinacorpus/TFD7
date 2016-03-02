@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * Class TFD_Cache_Filesystem
+ * Part of the Drupal twig extension distribution
+ *
+ * @see http://tfd7.rocks for more information
+ * @author Davy Rolink
+ */
 class TFD_Cache_Filesystem implements Twig_CacheInterface {
   private $directory;
 
@@ -34,7 +41,7 @@ class TFD_Cache_Filesystem implements Twig_CacheInterface {
   public function write($key, $content) {
     $directory = dirname($key);
     if ($this->ensureDirectory($directory)) {
-      $htaccess_path =  $directory . '/.htaccess';
+      $htaccess_path = $directory . '/.htaccess';
       if (!file_exists($htaccess_path) && file_put_contents($htaccess_path, static::htaccessLines())) {
         @chmod($htaccess_path, 0444);
       }
@@ -62,7 +69,7 @@ class TFD_Cache_Filesystem implements Twig_CacheInterface {
    */
   public function getTimestamp($key) {
     if (!file_exists($key)) {
-        return 0;
+      return 0;
     }
 
     return (int) @filemtime($key);
@@ -177,7 +184,7 @@ EOF;
    */
   protected function ensureDirectory($directory, $mode = 0777) {
     if ($this->createDirectory($directory, $mode)) {
-      $htaccess_path =  $directory . '/.htaccess';
+      $htaccess_path = $directory . '/.htaccess';
       if (!file_exists($htaccess_path) && file_put_contents($htaccess_path, static::htaccessLines())) {
         @chmod($htaccess_path, 0444);
       }
