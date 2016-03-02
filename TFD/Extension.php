@@ -58,26 +58,27 @@ class TFD_Extension extends Twig_Extension {
    */
   public function getFilters() {
     $filters = array();
-    $filters['strreplace'] = new Twig_SimpleFilter('strreplace', 'tfd_str_replace');
+
 
     // Drupal Core functions or PHP functions
     $filters['size'] = new Twig_SimpleFilter('size', 'format_size');
     $filters['plural'] = new Twig_SimpleFilter('plural', 'format_plural');
-    $filters['url'] = new Twig_SimpleFilter('url', [$this,'tfd_url']);
     $filters['t'] = new Twig_SimpleFilter('t', 't');
     $filters['attributes'] = new Twig_SimpleFilter('attributes', 'drupal_attributes');
     $filters['check_plain'] = new Twig_SimpleFilter('check_plain', 'check_plain');
     $filters['ucfirst'] = new Twig_SimpleFilter('ucfirst', 'ucfirst');
 
     // TFD Filters
-    $filters['defaults'] = new Twig_SimpleFilter('defaults', [$this,'tfd_defaults_filter']);
-    $filters['wrap'] = new Twig_SimpleFilter('wrap', [$this,'tfd_wrap_text']);
-    $filters['interval'] = new Twig_SimpleFilter('interval', [$this,'tfd_interval']);
-    $filters['format_date'] = new Twig_SimpleFilter('format_date', [$this,'tfd_format_date']);
+    $filters['url'] = new Twig_SimpleFilter('url', [$this,'url']);
+    $filters['strreplace'] = new Twig_SimpleFilter('strreplace', [$this,'str_replace']);
+    $filters['defaults'] = new Twig_SimpleFilter('defaults', [$this,'defaults_filter']);
+    $filters['wrap'] = new Twig_SimpleFilter('wrap', [$this,'wrap_text']);
+    $filters['interval'] = new Twig_SimpleFilter('interval', [$this,'interval']);
+    $filters['format_date'] = new Twig_SimpleFilter('format_date', [$this,'format_date']);
 
-    $filters['truncate'] = new Twig_SimpleFilter('truncate', [$this,'tfd_truncate_text']);
-    $filters['striphashes'] = new Twig_SimpleFilter('striphashes', [$this,'tfd_striphashes']);
-    $filters['without'] = new Twig_SimpleFilter('without', [$this,'tfd_without']);
+    $filters['truncate'] = new Twig_SimpleFilter('truncate', [$this,'truncate_text']);
+    $filters['striphashes'] = new Twig_SimpleFilter('striphashes', [$this,'striphashes']);
+    $filters['without'] = new Twig_SimpleFilter('without', [$this,'without']);
     $filters = array_merge($filters, module_invoke_all('twig_filter', $filters, $this));
     return array_values($filters);
 
@@ -103,16 +104,16 @@ class TFD_Extension extends Twig_Extension {
     $functions['array_search'] = new Twig_SimpleFunction('array_search', 'array_search');
 
     // TFD Functions
-    $functions['dump'] = new Twig_SimpleFunction('dump',  [$this,'tfd_dump', ['needs_environment' => TRUE]]);
-    $functions['render'] = new Twig_SimpleFunction('render',  [$this,'tfd_render']);
-    $functions['hide'] = new Twig_SimpleFunction('hide',  [$this,'tfd_hide']);
-    $functions['url'] = new Twig_SimpleFunction('url',  [$this,'tfd_url']);
-    $functions['machine_name'] = new Twig_SimpleFunction('machine_name',  [$this,'tfd_machine_name']);
-    $functions['viewblock'] = new Twig_SimpleFunction('viewblock',  [$this,'tfd_view_block']);
-    $functions['image_url'] = new Twig_SimpleFunction('image_url',  [$this,'tfd_image_url']);
-    $functions['image_size'] = new Twig_SimpleFunction('image_size',  [$this,'tfd_image_size']);
-    $functions['get_form_errors'] = new Twig_SimpleFunction('get_form_errors',  [$this,'tfd_form_get_errors']);
-    $functions['children'] = new Twig_SimpleFunction('children',  [$this,'tfd_get_children']);
+    $functions['dump'] = new Twig_SimpleFunction('dump',  [$this,'dump', ['needs_environment' => TRUE]]);
+    $functions['render'] = new Twig_SimpleFunction('render',  [$this,'render']);
+    $functions['hide'] = new Twig_SimpleFunction('hide',  [$this,'hide']);
+    $functions['url'] = new Twig_SimpleFunction('url',  [$this,'url']);
+    $functions['machine_name'] = new Twig_SimpleFunction('machine_name',  [$this,'machine_name']);
+    $functions['viewblock'] = new Twig_SimpleFunction('viewblock',  [$this,'view_block']);
+    $functions['image_url'] = new Twig_SimpleFunction('image_url',  [$this,'image_url']);
+    $functions['image_size'] = new Twig_SimpleFunction('image_size',  [$this,'image_size']);
+    $functions['get_form_errors'] = new Twig_SimpleFunction('get_form_errors',  [$this,'form_get_errors']);
+    $functions['children'] = new Twig_SimpleFunction('children',  [$this,'get_children']);
 
     $functions = array_merge($functions, module_invoke_all('twig_function', $functions, $this));
     return array_values($functions);
@@ -130,8 +131,8 @@ class TFD_Extension extends Twig_Extension {
    */
   public function getTests() {
     $tests = array();
-    $tests['property'] = new Twig_SimpleTest('property', [$this,'tfd_test_property']);
-    $tests['number'] = new Twig_SimpleTest('number', [$this,'tfd_test_number']);
+    $tests['property'] = new Twig_SimpleTest('property', [$this,'test_property']);
+    $tests['number'] = new Twig_SimpleTest('number', [$this,'test_number']);
     $tests = array_merge($tests, module_invoke_all('twig_test', $tests, $this));
     return array_values($tests);
   }
@@ -153,7 +154,7 @@ class TFD_Extension extends Twig_Extension {
    * @param $var array item from the render array of doom item you wish to be rendered.
    * @return string
    */
-  function tfd_render($var) {
+  function render($var) {
     if (isset($var) && !is_null($var)) {
       if (is_scalar($var)) {
         return $var;
@@ -173,7 +174,7 @@ class TFD_Extension extends Twig_Extension {
    * This function is useless, because of the way Twig works.
    * Please consider using the |without filter instead (like Drupal 8)
    */
-  function tfd_hide($var) {
+  function hide($var) {
     if (!is_null($var) && !is_scalar($var) && count($var) > 0) {
       hide($var);
     }
@@ -190,7 +191,7 @@ class TFD_Extension extends Twig_Extension {
    * @return array
    */
 
-  function tfd_without($input, $keys_to_remove) {
+  function without($input, $keys_to_remove) {
     if ($input instanceof ArrayAccess) {
       $filtered = clone $input;
     }
@@ -211,7 +212,7 @@ class TFD_Extension extends Twig_Extension {
    *
    * @param $element
    */
-  function tfd_striphashes($array) {
+  function striphashes($array) {
 
     if (is_array($array)) {
       $output = array();
@@ -236,13 +237,13 @@ class TFD_Extension extends Twig_Extension {
    * @param  $repl
    * @return mixed
    */
-  function tfd_str_replace($haystack, $needle, $repl) {
-    $haystack = $this->tfd_render($haystack);
+  function str_replace($haystack, $needle, $repl) {
+    $haystack = $this->render($haystack);
     return str_ireplace($needle, $repl, $haystack);
   }
 
 
-  function tfd_defaults_filter($value, $defaults = NULL) {
+  function defaults_filter($value, $defaults = NULL) {
     $args = func_get_args();
     $args = array_filter($args);
     if (count($args)) {
@@ -259,14 +260,14 @@ class TFD_Extension extends Twig_Extension {
    * @param $tag
    * @return string
    */
-  function tfd_wrap_text($value, $tag) {
-    $value = $this->tfd_render($value);
+  function wrap_text($value, $tag) {
+    $value = $this->render($value);
     if (!empty($value)) {
       return sprintf('<%s>%s</%s>', $tag, trim($value), $tag);
     }
   }
 
-  function tfd_form_get_errors() {
+  function form_get_errors() {
     $errors = form_get_errors();
     if (!empty($errors)) {
       $newErrors = array();
@@ -282,7 +283,7 @@ class TFD_Extension extends Twig_Extension {
     return $errors;
   }
 
-  function tfd_dump($env, $var = NULL, $function = NULL) {
+  function dump($env, $var = NULL, $function = NULL) {
     static $functions = array(
       'dpr' => NULL,
       'dpm' => NULL,
@@ -318,7 +319,7 @@ class TFD_Extension extends Twig_Extension {
   }
 
 
-  function tfd_image_url($filepath, $preset = NULL) {
+  function image_url($filepath, $preset = NULL) {
     if (is_array($filepath)) {
       $filepath = $filepath['filepath'];
     }
@@ -331,7 +332,7 @@ class TFD_Extension extends Twig_Extension {
   }
 
 
-  function tfd_image_size($filepath, $preset, $asHtml = TRUE) {
+  function image_size($filepath, $preset, $asHtml = TRUE) {
     if (is_array($filepath)) {
       $filepath = $filepath['filepath'];
     }
@@ -349,7 +350,7 @@ class TFD_Extension extends Twig_Extension {
   }
 
 
-  function tfd_url($item, $options = array()) {
+  function url($item, $options = array()) {
     if (is_numeric($item)) {
       $ret = url('node/' . $item, (array) $options);
     }
@@ -361,11 +362,11 @@ class TFD_Extension extends Twig_Extension {
     return check_url($ret);
   }
 
-  function tfd_test_property($element, $propertyName, $value = TRUE) {
+  function test_property($element, $propertyName, $value = TRUE) {
     return array_key_exists("#{$propertyName}", $element) && $element["#{$propertyName}"] == $value;
   }
 
-  function tfd_test_number($element) {
+  function test_number($element) {
     if (is_scalar($element) && is_numeric($element) && is_integer($element)) {
       return TRUE;
     }
@@ -380,8 +381,8 @@ class TFD_Extension extends Twig_Extension {
    * @param bool $words
    * @return string
    */
-  function tfd_truncate_text($value, $length = 300, $elipse = TRUE, $words = TRUE) {
-    $value = $this->tfd_render($value);
+  function truncate_text($value, $length = 300, $elipse = TRUE, $words = TRUE) {
+    $value = $this->render($value);
     if (drupal_strlen($value) > $length) {
       $value = drupal_substr($value, 0, $length);
       if ($words) {
@@ -418,7 +419,7 @@ class TFD_Extension extends Twig_Extension {
    * @param $date  String containing the date, or unix timestamp
    * @param int $granularity
    */
-  function tfd_interval($date, $granularity = 2, $display_ago = TRUE, $langcode = NULL) {
+  function interval($date, $granularity = 2, $display_ago = TRUE, $langcode = NULL) {
 
 
     $now = time();
@@ -438,7 +439,7 @@ class TFD_Extension extends Twig_Extension {
     }
   }
 
-  function tfd_format_date($date, $type, $langcode = NULL) {
+  function format_date($date, $type, $langcode = NULL) {
     if (preg_match('/[^\d]/', $date)) {
       $date = strtotime($date);
     }
@@ -446,7 +447,7 @@ class TFD_Extension extends Twig_Extension {
     return format_date($date, $type, '', NULL, $langcode);
   }
 
-  function tfd_machine_name($string) {
+  function machine_name($string) {
     return preg_replace(array('/[^a-z0-9]/', '/_+/'), '_', strtolower($string));
   }
 
@@ -458,7 +459,7 @@ class TFD_Extension extends Twig_Extension {
    * @param boolean $render return the raw data instead of the rendered content.
    * @return bool|string
    */
-  function tfd_view_block($delta, $module = NULL, $render = TRUE) {
+  function view_block($delta, $module = NULL, $render = TRUE) {
     $output = FALSE;
     if (is_null($module)) {
       global $theme;
@@ -492,7 +493,7 @@ class TFD_Extension extends Twig_Extension {
    * @param $render_array
    * @return array
    */
-  function tfd_get_children($render_array) {
+  function get_children($render_array) {
     if (!empty($render_array) && is_array($render_array)) {
       $children = array();
       foreach (element_children($render_array) as $key) {

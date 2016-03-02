@@ -15,7 +15,7 @@ class TFD_Node_Render extends Twig_Node_Print {
   public function compile(Twig_Compiler $compiler) {
     $compiler
       ->addDebugInfo($this)
-      ->write("echo  \$this->getEnvironment()->getExtension('twig_for_drupal')->tfd_render(")
+      ->write("echo  \$this->getEnvironment()->getExtension('twig_for_drupal')->render(")
       ->subcompile($this->getNode('expr'))
       ->raw(");\n");
   }
