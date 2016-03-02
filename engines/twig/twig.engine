@@ -119,7 +119,7 @@ function twig_get_instance() {
     $twigEnvironment['autoescape'] = variable_get('twig_autoescape', FALSE); // Automatically escape all output
     $twigEnvironment['auto_reload'] = variable_get('twig_auto_reload',TRUE);
     $twigEnvironment['debug'] = variable_get('theme_debug',FALSE);
-    if (variable_get('file_twigcache', TRUE) === TRUE) {
+    if (variable_get('twig_filecache', TRUE) === TRUE) {
       $twigEnvironment['cache'] = twig_get_cache_bin();
     }
 
