@@ -6,6 +6,7 @@
  *
  * @see http://tfd7.rocks for more information
  * @author Davy Rolink
+ * @author Rene Bakx
  */
 class TFD_Cache_Filesystem implements Twig_CacheInterface {
   private $directory;
@@ -15,11 +16,13 @@ class TFD_Cache_Filesystem implements Twig_CacheInterface {
    * @param $options   int    A set of options
    */
   public function __construct($directory) {
+    
     $this->directory = $directory;
   }
 
   /**
    * Generates a cache key for the given template class name.
+   * Cleans the $name, everything before the name is removed
    *
    * @param string $name The template name
    * @param string $className The template class name
@@ -27,9 +30,9 @@ class TFD_Cache_Filesystem implements Twig_CacheInterface {
    * @return string
    */
   public function generateKey($name, $className) {
+    $name = preg_replace("/(.*\\/themes\\/)/","",$name);
     $hash = hash('sha256', $className);
-
-    return $this->directory . '/' . dirname($name) . '/' . basename($name) . '_' . $hash . '.php';
+    return $this->directory . '/' . dirname($name) . '/' . basename($name) . '_' . $hash . '.php';;
   }
 
   /**
