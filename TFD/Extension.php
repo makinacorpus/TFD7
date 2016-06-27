@@ -14,7 +14,6 @@ class TFD_Extension extends Twig_Extension {
   public function getGlobals() {
     return array(
       'base_path' => base_path(),
-
     );
   }
 
@@ -22,10 +21,19 @@ class TFD_Extension extends Twig_Extension {
     return array(new TFD_NodeVisitor());
   }
 
+  /**
+   * Defines the 'missing' !, || and && operators.
+   * @return array
+   */
   public function getOperators() {
     return array(
-      array(), // There are no UNARY operators
-      array( // Just map || and && for convience to developers
+      array(
+        '!' => array(
+          'precedence' => 50,
+          'class' => 'Twig_Node_Expression_Unary_Not'
+        ),
+      ),
+      array(
         '||' => array(
           'precedence' => 10,
           'class' => 'Twig_Node_Expression_Binary_Or',
@@ -35,8 +43,8 @@ class TFD_Extension extends Twig_Extension {
           'precedence' => 15,
           'class' => 'Twig_Node_Expression_Binary_And',
           'associativity' => Twig_ExpressionParser::OPERATOR_LEFT
-        )
-      )
+        ),
+      ),
     );
   }
 
@@ -69,19 +77,17 @@ class TFD_Extension extends Twig_Extension {
     $filters['ucfirst'] = new Twig_SimpleFilter('ucfirst', 'ucfirst');
 
     // TFD Filters
-    $filters['url'] = new Twig_SimpleFilter('url', [$this,'url']);
+    $filters['url'] = new Twig_SimpleFilter('url', [$this, 'url']);
     $filters['strreplace'] = new Twig_SimpleFilter('strreplace', [$this,'str_replace']);
     $filters['defaults'] = new Twig_SimpleFilter('defaults', [$this,'defaults_filter']);
-    $filters['wrap'] = new Twig_SimpleFilter('wrap', [$this,'wrap_text']);
+    $filters['wrap'] = new Twig_SimpleFilter('wrap', [$this, 'wrap_text']);
     $filters['interval'] = new Twig_SimpleFilter('interval', [$this,'interval']);
     $filters['format_date'] = new Twig_SimpleFilter('format_date', [$this,'format_date']);
-
     $filters['truncate'] = new Twig_SimpleFilter('truncate', [$this,'truncate_text']);
     $filters['striphashes'] = new Twig_SimpleFilter('striphashes', [$this,'striphashes']);
-    $filters['without'] = new Twig_SimpleFilter('without', [$this,'without']);
+    $filters['without'] = new Twig_SimpleFilter('without', [$this, 'without']);
     $filters = array_merge($filters, module_invoke_all('twig_filter', $filters, $this));
-    return array_values($filters);
-
+    return $filters;
   }
 
 
@@ -103,20 +109,25 @@ class TFD_Extension extends Twig_Extension {
     $functions['variable_get'] = new Twig_SimpleFunction('variable_get', 'variable_get');
     $functions['array_search'] = new Twig_SimpleFunction('array_search', 'array_search');
 
+    $functions['current_path'] = new Twig_SimpleFunction('current_path', 'current_path');
+
     // TFD Functions
-    $functions['dump'] = new Twig_SimpleFunction('dump',  [$this,'dump', ['needs_environment' => TRUE]]);
+    $functions['dump'] = new Twig_SimpleFunction('dump',  [$this,'dump']);
     $functions['render'] = new Twig_SimpleFunction('render',  [$this,'render']);
     $functions['hide'] = new Twig_SimpleFunction('hide',  [$this,'hide']);
     $functions['url'] = new Twig_SimpleFunction('url',  [$this,'url']);
     $functions['machine_name'] = new Twig_SimpleFunction('machine_name',  [$this,'machine_name']);
     $functions['viewblock'] = new Twig_SimpleFunction('viewblock',  [$this,'view_block']);
     $functions['image_url'] = new Twig_SimpleFunction('image_url',  [$this,'image_url']);
+    $functions['file_url'] = new Twig_SimpleFunction('file_url',  [$this,'file_url']);
     $functions['image_size'] = new Twig_SimpleFunction('image_size',  [$this,'image_size']);
     $functions['get_form_errors'] = new Twig_SimpleFunction('get_form_errors',  [$this,'form_get_errors']);
     $functions['children'] = new Twig_SimpleFunction('children',  [$this,'get_children']);
+    $functions['theme_path'] = new Twig_SimpleFunction('theme_path',[$this,'theme_path']);
+
 
     $functions = array_merge($functions, module_invoke_all('twig_function', $functions, $this));
-    return array_values($functions);
+    return $functions;
   }
 
 
@@ -131,10 +142,29 @@ class TFD_Extension extends Twig_Extension {
    */
   public function getTests() {
     $tests = array();
-    $tests['property'] = new Twig_SimpleTest('property', [$this,'test_property']);
-    $tests['number'] = new Twig_SimpleTest('number', [$this,'test_number']);
+    $tests['property'] = new Twig_SimpleTest('property', [
+      $this,
+      'test_property'
+    ]);
+
+    $tests['array'] = new Twig_SimpleTest('array', function ($value) {
+      return is_array($value);
+    });
+
+    $tests['scalar'] = new Twig_SimpleTest('scalar', function ($value) {
+      return is_scalar($value);
+    });
+
+    $tests['number'] = new Twig_SimpleTest('number', function ($value) {
+      return is_numeric($value);
+    });
+
+    $tests['string'] = new Twig_SimpleTest('string', function ($value) {
+      return is_string($value);
+    });
+
     $tests = array_merge($tests, module_invoke_all('twig_test', $tests, $this));
-    return array_values($tests);
+    return $tests;
   }
 
   public function getName() {
@@ -283,7 +313,8 @@ class TFD_Extension extends Twig_Extension {
     return $errors;
   }
 
-  function dump($env, $var = NULL, $function = NULL) {
+  function dump($var = NULL, $function = NULL) {
+
     static $functions = array(
       'dpr' => NULL,
       'dpm' => NULL,
@@ -318,6 +349,17 @@ class TFD_Extension extends Twig_Extension {
     }
   }
 
+  function file_url($file_uri) {
+    if (is_scalar($file_uri)) {
+      if (file_valid_uri($file_uri)) {
+        return file_create_url($file_uri);
+      }
+      elseif (substr_count($file_uri, 'file/')) {
+        return url(drupal_lookup_path('alias', $file_uri));
+      }
+    }
+    return $file_uri;
+  }
 
   function image_url($filepath, $preset = NULL) {
     if (is_array($filepath)) {
@@ -366,12 +408,7 @@ class TFD_Extension extends Twig_Extension {
     return array_key_exists("#{$propertyName}", $element) && $element["#{$propertyName}"] == $value;
   }
 
-  function test_number($element) {
-    if (is_scalar($element) && is_numeric($element) && is_integer($element)) {
-      return TRUE;
-    }
-    return FALSE;
-  }
+
 
   /**
    *
@@ -504,4 +541,31 @@ class TFD_Extension extends Twig_Extension {
     return array();
   }
 
+
+
+
+  /**
+   * Returns the path the a theme.
+   * usage : theme_path({'absolute':true,'theme':'solid'})
+   * both parameters are optional.
+   * @param $args
+   * @return string
+   */
+  function theme_path($args) {
+    global $base_url, $theme_path;
+    if (isset($args['theme'])) {
+      $path = drupal_get_path('theme', $args['theme']);
+    }
+    else {
+      $path = $theme_path;
+    }
+
+    if (isset($args['absolute']) && ($args['absolute'] == TRUE || strtolower($args['absolute']) == 'true')) {
+      $path = sprintf('%s/%s/', $base_url, $path);
+    }
+    else {
+      $path = $path . '/';
+    }
+    return $path;
+  }
 }
