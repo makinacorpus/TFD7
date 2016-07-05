@@ -14,9 +14,9 @@
             "email": "rene@71media.net"
         }
     ],
-        "autoload": {
+    "autoload": {
         "psr-0" : {
-            "TFD_'" : "TFD/"
+            "TFD_" : ""
         }
     },
     "minimum-stability": "dev"
