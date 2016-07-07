@@ -1,13 +1,13 @@
 {
     "name": "tfd7/tfd7",
     "description": "Twig for Drupal 7, use the same convient template language as in Drupal 8 core",
-    "keywords": ["templating"],     
+    "keywords": ["templating","drupal","twig"],     
     "homepage":  "http://tfd7.rocks",    
     "type": "library",
     "require": {
         "twig/twig": "^1.23"
     },
-    "license": "BSD-3-Clause",
+    "license": "GPL-2.0",
     "authors": [
         {
             "name": "Rene Bakx",
