@@ -133,6 +133,7 @@ function twig_get_instance() {
 
     $twig_engine = new TFD_Environment($loader, $twigEnvironment);
     $twig_engine->addExtension(new TFD_Extension());
+    drupal_alter('twig_init', $twig_engine);
   }
   return $twig_engine;
 }
