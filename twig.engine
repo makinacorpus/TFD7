@@ -4,7 +4,21 @@
  *
  * @author René Bakx
  * @see http://tfd7.rocks for more information
+ * 
+ * @version 7.x.3-beta2
  */
+
+/**
+ * Check if the needed classes can be autoloaded or not.
+ * If they can be autoloaded it most likely means the site is under
+ * composer-manager.
+*/
+if (!class_exists('TFD_Cache_Filesystem') && file_exists(__DIR__.'/vendor/autoload.php')){
+  include_once(__DIR__.'/vendor/autoload.php');
+} else {
+  throw new Exception('You need to run composer install before using TFD7');
+}
+
 
 /**
  * registers the .tpl.html extension for twig templates
