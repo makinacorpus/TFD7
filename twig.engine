@@ -6,21 +6,6 @@
  * @see http://tfd7.rocks for more information
  */
 
-
-/**
- * Register the needed classes with the autoloader
- * Todo, add support for Composer autoload.
- */
-if (module_exists('xautoload')) {
-  $twig_class_map = array(
-    'Twig_' => DRUPAL_ROOT . '/sites/all/libraries/Twig/lib/Twig/',
-    'TFD_' => DRUPAL_ROOT . '/sites/all/libraries/TFD/TFD/',
-  );
-  $finder = xautoload_get_finder();
-  $finder->registerPrefixesDeep($twig_class_map);
-}
-
-
 /**
  * registers the .tpl.html extension for twig templates
  * @return string
