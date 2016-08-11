@@ -9,6 +9,7 @@
 
 /**
  * Register the needed classes with the autoloader
+ * Todo, add support for Composer autoload.
  */
 if (module_exists('xautoload')) {
   $twig_class_map = array(
@@ -17,18 +18,6 @@ if (module_exists('xautoload')) {
   );
   $finder = xautoload_get_finder();
   $finder->registerPrefixesDeep($twig_class_map);
-}
-else {
-  $twig_class_map = array(
-    'Twig_' => DRUPAL_ROOT . '/sites/all/libraries/Twig/lib/',
-    'TFD_' => DRUPAL_ROOT . '/sites/all/libraries/TFD/',
-  );
-  $autoloader = &drupal_static(__FUNCTION__);
-  if (!$autoloader) {
-    include_once(DRUPAL_ROOT . '/sites/all/libraries/TFD/autoloader/Autoloader.php');
-    $autoloader = UniversalClassLoader::getInstance();
-    $autoloader->registerPrefixes($twig_class_map);
-  }
 }
 
 

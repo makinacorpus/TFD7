@@ -45,7 +45,7 @@ class TFD_Environment extends Twig_Environment
      */
     public function getTemplateClass($name, $index = null)
     {
-        return str_replace(array('-', '.', '/'), "_", $this->generateCacheKeyByName($name)) . (null === $index ? '' : '_'.$index);
+      return str_replace(array('-', '.', '/'), "_", $this->generateCacheKeyByName($name)) . (null === $index ? '' : '_'.$index);
     }
 
     public function loadTemplate($name, $index = null)
