@@ -34,27 +34,12 @@ class TFD_Loader_Filesystem extends Twig_Loader_Filesystem
 
             // for BC
             if (!isset($this->resolverCache[$name])) {
-                $found = false;
                 if (is_readable($name)) {
-                    $this->resolverCache[$name] = $name;
-                    $found = true;
-                } else {
-                    $paths = twig_get_discovered_templates();
-                    if (array_key_exists($name, $paths)) {
-                        $completeName = $paths[$name];
-                        $found = $this->isTemplateReadable($name, $completeName);
-                    }else {
-                        global $theme;
-                        if (stripos($name,$theme.'::') === 0){
-                            $name = str_replace($theme.'::','',$name);
-                            if (isset($paths[$name])) {
-                                $completeName = $paths[$name];
-                                $found = $this->isTemplateReadable($name, $completeName);
-                            }
-                        }
-                    }
+                  $this->resolverCache[$name] = $name;
                 }
-                if (!$found) throw new Twig_Error_Loader(sprintf('Could not find a cache key for template "%s"', $name), -1, null, $previous);
+                else {
+                  throw new Twig_Error_Loader(sprintf('Could not find a cache key for template "%s"', $name), -1, null, $previous);
+                }
             }
         }
         return $this->resolverCache[$name];
