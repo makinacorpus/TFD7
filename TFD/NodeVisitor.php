@@ -40,11 +40,11 @@ class TFD_NodeVisitor implements Twig_NodeVisitorInterface {
    *
    * @return Twig_NodeInterface The modified node
    */
-  function enterNode(Twig_NodeInterface $node, Twig_Environment $env) {
+  function enterNode(Twig_Node $node, Twig_Environment $env) {
     return $node;
   }
 
-  function leaveNode(Twig_NodeInterface $node, Twig_Environment $env) {
+  function leaveNode(Twig_Node $node, Twig_Environment $env) {
     if ($node instanceof Twig_Node_Print) {
       // make sure that every {{ }} printed object is handled as a TFD_Node_Render node (aka autorender)
       if (!$node->getNode('expr') instanceof Twig_Node_Expression_Function) {
@@ -54,7 +54,11 @@ class TFD_NodeVisitor implements Twig_NodeVisitorInterface {
             $targetNode->setAttribute('always_defined', TRUE);
           }
           if (!$targetNode instanceof Twig_Node_Expression_MethodCall) {
-            $node = new TFD_Node_Render($targetNode, $node->getLine(), $node->getNodeTag());
+            if (method_exists($node, 'getLine')) { // Twig 1.x
+              $node = new TFD_Node_Render($targetNode, $node->getLine(), $node->getNodeTag());
+            } else { // Twig 2.x
+              $node = new TFD_Node_Render($targetNode, $node->getTemplateLine(), $node->getNodeTag());
+            }
           }
         }
       }
@@ -63,7 +67,11 @@ class TFD_NodeVisitor implements Twig_NodeVisitorInterface {
         if ($targetNode->getAttribute('name') == 'hide') {
           $targetNode = $this->castObject('TFD_Node_Expression_Nocall', $targetNode);
           $targetNode->setAttribute('always_defined', TRUE);
-          $node = new TFD_Node_Hide($targetNode, $node->getLine(), $node->getNodeTag());
+          if (method_exists($node, 'getLine')) { // Twig 1.x
+            $node = new TFD_Node_Hide($targetNode, $node->getLine(), $node->getNodeTag());
+          } else { // Twig 2.x
+            $node = new TFD_Node_Hide($targetNode, $node->getTemplateLine(), $node->getNodeTag());
+          }
         }
       }
     }
